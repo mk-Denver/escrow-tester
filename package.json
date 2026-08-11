@@ -1,0 +1,20 @@
+{
+  "name": "escrow-tester",
+  "version": "1.0.0",
+  "description": "Universal PIP-01 escrow descriptor tester — discover and validate standalone escrow services from Nostr relays",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
