@@ -13,31 +13,32 @@
       <div class="subtitle">PIP-01 — Discover &amp; validate standalone escrow services from Nostr relays</div>
     </div>
     <div class="controls">
-      <button id="btn-discover" class="primary">Discover &amp; Test</button>
+      <button id="btn-discover" class="primary">Discover</button>
+      <button id="btn-test-all" class="primary" style="display:none">Test All</button>
       <button id="btn-clear">Clear</button>
     </div>
   </header>
 
   <main>
     <div id="status-bar" class="status-bar" style="display:none">
-      <div class="stat"><span class="label">Relays queried:</span> <span class="num" id="stat-relays">0</span></div>
-      <div class="stat"><span class="label">Descriptors found:</span> <span class="num" id="stat-total">0</span></div>
+      <div class="stat"><span class="label">Found:</span> <span class="num" id="stat-total">0</span></div>
       <div class="stat pass"><span class="label">Standalone:</span> <span class="num" id="stat-standalone">0</span></div>
       <div class="stat warn"><span class="label">Discovery-only:</span> <span class="num" id="stat-discovery">0</span></div>
-      <div class="stat pass"><span class="label">Validation pass:</span> <span class="num" id="stat-pass">0</span></div>
-      <div class="stat fail"><span class="label">Validation fail:</span> <span class="num" id="stat-fail">0</span></div>
+      <div class="stat pass"><span class="label">Tested:</span> <span class="num" id="stat-tested">0</span></div>
+      <div class="stat pass"><span class="label">Pass:</span> <span class="num" id="stat-pass">0</span></div>
+      <div class="stat fail"><span class="label">Fail:</span> <span class="num" id="stat-fail">0</span></div>
     </div>
 
     <div id="loading" class="loading" style="display:none">
-      <span class="spinner"></span> Querying relays and running tests...
+      <span class="spinner"></span> Querying relays...
     </div>
 
     <div id="results"></div>
 
     <div id="empty" class="empty-state">
       <h2>PIP-01 Escrow Descriptor Tester</h2>
-      <p>Click <strong>Discover &amp; Test</strong> to query Nostr relays for kind 30361 escrow descriptor events,<br>
-      validate each descriptor against the PIP-01 specification, and run service-level interop tests.</p>
+      <p>Click <strong>Discover</strong> to query Nostr relays for kind 30361 escrow descriptor events,<br>
+      then click <strong>Test</strong> on any descriptor to validate it against the PIP-01 specification and run service-level interop tests.</p>
     </div>
   </main>
 

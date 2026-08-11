@@ -4,7 +4,7 @@ const express = require('express');
 const path = require('path');
 const { discoverDescriptors } = require('./lib/relay');
 const { validateDescriptor } = require('./lib/validate');
-const { runAllTests } = require('./lib/test-runner');
+const { runServiceTests } = require('./lib/test-runner');
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -63,8 +63,31 @@ app.post('/api/test-all', async (req, res) => {
   try {
     const relays = req.body.relays || NOSTR_RELAYS;
     const { descriptors, relayResults } = await discoverDescriptors(relays);
+    const { runAllTests } = require('./lib/test-runner');
     const results = await runAllTests(descriptors);
     res.json({ descriptors: results, relayResults });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** POST /api/test-one — Validate + service test a single descriptor entry */
+app.post('/api/test-one', async (req, res) => {
+  try {
+    const descriptor = req.body.descriptor;
+    const pubkey = req.body.pubkey;
+    const eventId = req.body.eventId;
+
+    if (!descriptor) return res.status(400).json({ error: 'descriptor required' });
+
+    const validation = validateDescriptor(descriptor);
+
+    let serviceReport = null;
+    if (descriptor?.service?.endpoint) {
+      serviceReport = await runServiceTests({ descriptor, pubkey, eventId });
+    }
+
+    res.json({ validation, serviceReport });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
