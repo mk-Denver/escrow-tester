@@ -116,7 +116,7 @@ function renderCard(entry, idx) {
           : `<button class="test-btn${hasService ? ' primary' : ''}" style="padding:4px 10px;font-size:11px;margin-left:8px" ${isTested ? '' : ''}>${isTested ? 'Re-Test' : 'Test'}</button>`}
       </div>
     </div>
-    <div class="card-body${isTested ? ' open' : ''}">
+    <div class="card-body">
       <div class="section-title">Descriptor Info</div>
       <div class="result-row">
         <span class="result-field">Event ID</span>
@@ -175,6 +175,21 @@ function renderTestResults(result) {
   return html;
 }
 
+function renderTestResultsBody(entry, result) {
+  const desc = entry.descriptor || {};
+  const relays = (entry.seenOn || []).join(', ') || '?';
+  const endpoint = desc.service?.endpoint || '';
+
+  let html = '<div class="section-title">Descriptor Info</div>';
+  html += `<div class="result-row"><span class="result-field">Event ID</span><span class="result-message">${escapeHtml(entry.eventId || '?')}</span></div>`;
+  html += `<div class="result-row"><span class="result-field">Published at</span><span class="result-message">${entry.created_at ? new Date(entry.created_at * 1000).toISOString() : '?'}</span></div>`;
+  html += `<div class="result-row"><span class="result-field">Seen on</span><span class="result-message">${escapeHtml(relays)}</span></div>`;
+  if (endpoint) html += `<div class="result-row"><span class="result-field">Endpoint</span><span class="result-message">${escapeHtml(endpoint)}</span></div>`;
+
+  html += renderTestResults(result);
+  return html;
+}
+
 function escapeHtml(str) {
   const s = String(str);
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -191,9 +206,53 @@ function updateSingleCard(eventId) {
   if (!card) return;
   const entry = state.descriptors.find(d => d.eventId === eventId);
   if (!entry) return;
-  card.outerHTML = renderCard(entry, state.descriptors.indexOf(entry));
-  // Re-attach event listeners
-  renderDiscoveryResults(state.descriptors);
+  const isTesting = cardIsTesting(eventId);
+
+  // Update header badges
+  const titleDiv = card.querySelector('.card-title');
+  const existingResult = state.testResults[eventId];
+  let badgeHtml = '';
+  if (existingResult) {
+    const isPass = existingResult.validation?.valid;
+    const fCount = existingResult.validation?.results?.filter(r => r.status === 'fail').length || 0;
+    badgeHtml = isPass
+      ? '<span class="badge badge-pass">PASS</span>'
+      : `<span class="badge badge-fail">${fCount} FAILURE${fCount !== 1 ? 'S' : ''}</span>`;
+  }
+  const hasService = !!(entry.descriptor?.service);
+  badgeHtml += hasService
+    ? '<span class="badge badge-standalone">STANDALONE</span>'
+    : '<span class="badge badge-discovery">DISCOVERY-ONLY</span>';
+
+  // Rebuild title area badges (keep the type badge intact)
+  const typeSpan = titleDiv.querySelector('.type');
+  const typeHtml = typeSpan ? typeSpan.outerHTML : '';
+  titleDiv.innerHTML = typeHtml + ' ' + badgeHtml;
+
+  // Update meta area (spinner/test button)
+  const metaDiv = card.querySelector('.card-meta');
+  const existingSpinner = metaDiv.querySelector('.test-action');
+  if (existingSpinner) existingSpinner.remove();
+  if (isTesting) {
+    metaDiv.insertAdjacentHTML('beforeend', '<span class="spinner test-action" style="width:16px;height:16px;border-width:2px;margin:0 4px"></span>');
+  } else {
+    metaDiv.insertAdjacentHTML('beforeend', `<button class="test-btn test-action${hasService ? ' primary' : ''}" style="padding:4px 10px;font-size:11px;margin-left:8px">${existingResult ? 'Re-Test' : 'Test'}</button>`);
+  }
+
+  // Update body content with test results
+  const bodyEl = card.querySelector('.card-body');
+  if (existingResult) {
+    bodyEl.innerHTML = renderTestResultsBody(entry, existingResult);
+  }
+
+  // Re-bind test button
+  const btn = card.querySelector('.test-btn');
+  if (btn) {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await runSingleTest(eventId, card);
+    });
+  }
 }
 
 async function runSingleTest(eventId, cardElement) {
@@ -225,6 +284,15 @@ async function runSingleTest(eventId, cardElement) {
     setCardTesting(eventId, false);
     updateSingleCard(eventId);
     updateStats(state.descriptors);
+
+    // Expand this card to show results
+    const card = document.querySelector(`.descriptor-card[data-event-id="${CSS.escape(eventId)}"]`);
+    if (card) {
+      const body = card.querySelector('.card-body');
+      const icon = card.querySelector('.toggle-icon');
+      body.classList.add('open');
+      if (icon) icon.textContent = '\u2212';
+    }
   }
 }
 
