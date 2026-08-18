@@ -101,7 +101,7 @@ function renderCard(entry, idx) {
   return `<div class="descriptor-card" data-event-id="${escapeHtml(entry.eventId)}">
     <div class="card-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <span class="toggle-icon" style="color:#8b949e;font-size:16px;width:20px;text-align:center">+</span>
+        <span class="toggle-icon">+</span>
         <div class="card-title">
           <span class="type">${escapeHtml(type)}</span>
           ${statusBadge} ${standaloneBadge}
