@@ -8,10 +8,12 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "echo No build step required"
   },
   "dependencies": {
     "express": "^4.19.2",
+    "serverless-http": "^3.2.0",
     "ws": "^8.21.1"
   },
   "devDependencies": {

@@ -1,0 +1,31 @@
+# Netlify deployment configuration for the PIP-01 Escrow Descriptor Tester.
+#
+# The `public/` directory is served as a static site, and all `/api/*` requests
+# are proxied to the serverless Express app defined in `netlify/functions/api.js`.
+#
+# Note: the Nostr relay queries (lib/relay.js) open outbound WebSocket
+# connections. Netlify Functions have a bounded execution time (default 10s,
+# max 26s), so set RELAY_TIMEOUT_MS below that limit via the Netlify dashboard.
+
+[build]
+  command = "npm run build"
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Proxy API calls to the serverless Express app (payload 1.0 event.path keeps
+# the original /api/* path, which the Express routes expect).
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"

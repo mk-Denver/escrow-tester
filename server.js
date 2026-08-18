@@ -6,7 +6,11 @@ const { discoverDescriptors } = require('./lib/relay');
 const { validateDescriptor } = require('./lib/validate');
 const { runSchemaTests } = require('./lib/test-runner');
 
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+try {
+  require('dotenv').config({ path: path.join(__dirname, '.env') });
+} catch {
+  // dotenv is optional (not present in the Netlify function runtime)
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -98,9 +102,13 @@ app.get('/api/relays', (req, res) => {
   res.json({ relays: NOSTR_RELAYS });
 });
 
-// ── Start ────────────────────────────────────────────────────────────────────
+// ── Start (local only) ───────────────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`\nescrow-tester running at http://localhost:${PORT}`);
-  console.log(`Relays: ${NOSTR_RELAYS.join(', ')}\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\nescrow-tester running at http://localhost:${PORT}`);
+    console.log(`Relays: ${NOSTR_RELAYS.join(', ')}\n`);
+  });
+}
+
+module.exports = { app };
