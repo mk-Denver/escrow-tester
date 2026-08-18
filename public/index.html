@@ -10,7 +10,7 @@
   <header>
     <div>
       <h1>Escrow Descriptor Tester</h1>
-      <div class="subtitle">PIP-01 — Discover &amp; validate standalone escrow services from Nostr relays</div>
+      <div class="subtitle">PIP-01 — Discover &amp; validate escrow descriptors from Nostr relays</div>
     </div>
     <div class="controls">
       <button id="btn-discover" class="primary">Discover</button>
@@ -22,8 +22,8 @@
   <main>
     <div id="status-bar" class="status-bar" style="display:none">
       <div class="stat"><span class="label">Found:</span> <span class="num" id="stat-total">0</span></div>
-      <div class="stat pass"><span class="label">Standalone:</span> <span class="num" id="stat-standalone">0</span></div>
-      <div class="stat warn"><span class="label">Discovery-only:</span> <span class="num" id="stat-discovery">0</span></div>
+      <div class="stat pass"><span class="label">Schema discovery:</span> <span class="num" id="stat-standalone">0</span></div>
+      <div class="stat warn"><span class="label">Compatibility:</span> <span class="num" id="stat-discovery">0</span></div>
       <div class="stat pass"><span class="label">Tested:</span> <span class="num" id="stat-tested">0</span></div>
       <div class="stat pass"><span class="label">Pass:</span> <span class="num" id="stat-pass">0</span></div>
       <div class="stat fail"><span class="label">Fail:</span> <span class="num" id="stat-fail">0</span></div>
@@ -38,12 +38,12 @@
     <div id="empty" class="empty-state">
       <h2>PIP-01 Escrow Descriptor Tester</h2>
       <p>Click <strong>Discover</strong> to query Nostr relays for kind 30361 escrow descriptor events,<br>
-      then click <strong>Test</strong> on any descriptor to validate it against the PIP-01 specification and run service-level interop tests.</p>
+      then click <strong>Test</strong> on any descriptor to validate it against the PIP-01 specification and run service-schema fetch-safety tests.</p>
     </div>
   </main>
 
   <div class="footer">
-    Queries: wss://nos.lol, wss://relay.damus.io &nbsp;|&nbsp; Kind 30361 &nbsp;|&nbsp; PIP-01 Standalone Escrow Descriptor
+    Queries: wss://nos.lol, wss://relay.damus.io &nbsp;|&nbsp; Kind 30361 &nbsp;|&nbsp; PIP-01 Escrow Descriptor
   </div>
 
   <script src="/app.js"></script>

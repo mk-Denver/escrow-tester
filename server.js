@@ -4,7 +4,7 @@ const express = require('express');
 const path = require('path');
 const { discoverDescriptors } = require('./lib/relay');
 const { validateDescriptor } = require('./lib/validate');
-const { runServiceTests } = require('./lib/test-runner');
+const { runSchemaTests } = require('./lib/test-runner');
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -49,7 +49,7 @@ app.post('/api/validate-all', async (req, res) => {
 
     const validated = descriptors.map(entry => ({
       ...entry,
-      validation: validateDescriptor(entry.descriptor),
+      validation: validateDescriptor(entry.descriptor, entry.tags),
     }));
 
     res.json({ descriptors: validated, relayResults });
@@ -80,11 +80,11 @@ app.post('/api/test-one', async (req, res) => {
 
     if (!descriptor) return res.status(400).json({ error: 'descriptor required' });
 
-    const validation = validateDescriptor(descriptor);
+    const validation = validateDescriptor(descriptor, req.body.tags);
 
     let serviceReport = null;
-    if (descriptor?.service?.endpoint) {
-      serviceReport = await runServiceTests({ descriptor, pubkey, eventId });
+    if (descriptor?.service?.schema?.url) {
+      serviceReport = await runSchemaTests({ descriptor, pubkey, eventId, tags: req.body.tags });
     }
 
     res.json({ validation, serviceReport });

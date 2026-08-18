@@ -14,7 +14,7 @@ function updateStats(descriptors) {
   $('#status-bar').style.display = descriptors.length > 0 ? 'flex' : 'none';
   if (descriptors.length === 0) return;
 
-  const standalone = descriptors.filter(d => d.descriptor?.service);
+  const standalone = descriptors.filter(d => d.descriptor?.service?.schema);
   let tested = 0, passed = 0, failed = 0;
   for (const d of descriptors) {
     const tr = state.testResults[d.eventId];
@@ -74,8 +74,8 @@ function renderCard(entry, idx) {
   const networks = Array.isArray(desc.networks) ? desc.networks.join(', ') : '?';
   const version = desc.version ?? '?';
   const relays = (entry.seenOn || []).join(', ') || '?';
-  const hasService = !!(desc.service);
-  const endpoint = desc.service?.endpoint || '';
+  const hasService = !!(desc.service?.schema);
+  const schemaUrl = desc.service?.schema?.url || '';
 
   const existingResult = state.testResults[entry.eventId];
   let statusBadge = '';
@@ -92,8 +92,8 @@ function renderCard(entry, idx) {
   }
 
   const standaloneBadge = hasService
-    ? '<span class="badge badge-standalone">STANDALONE</span>'
-    : '<span class="badge badge-discovery">DISCOVERY-ONLY</span>';
+    ? '<span class="badge badge-standalone">SCHEMA DISCOVERY</span>'
+    : '<span class="badge badge-discovery">COMPATIBILITY</span>';
 
   const isTested = !!existingResult;
   const isTesting = cardIsTesting(entry.eventId);
@@ -130,7 +130,7 @@ function renderCard(entry, idx) {
         <span class="result-field">Seen on</span>
         <span class="result-message">${escapeHtml(relays)}</span>
       </div>
-      ${endpoint ? `<div class="result-row"><span class="result-field">Endpoint</span><span class="result-message">${escapeHtml(endpoint)}</span></div>` : ''}
+      ${schemaUrl ? `<div class="result-row"><span class="result-field">Schema URL</span><span class="result-message">${escapeHtml(schemaUrl)}</span></div>` : ''}
       ${bodyHtml}
     </div>
   </div>`;
@@ -154,7 +154,7 @@ function renderTestResults(result) {
   }
 
   if (svc && !svc.skip && svc.results.length > 0) {
-    html += `<div class="section-title">Service Tests \u2014 ${escapeHtml(svc.endpoint)}</div>`;
+    html += `<div class="section-title">Schema Tests \u2014 ${escapeHtml(svc.schemaUrl)}</div>`;
     html += svc.results.map(r => {
       const icon = r.pass ? '\u2713' : '\u2717';
       return `<div class="service-test-result">
@@ -164,7 +164,7 @@ function renderTestResults(result) {
       </div>`;
     }).join('');
   } else if (svc && svc.skip) {
-    html += '<div class="section-title">Service Tests</div>';
+    html += '<div class="section-title">Schema Tests</div>';
     html += `<div class="result-row"><span class="result-message" style="color:#8b949e">Skipped: ${escapeHtml(svc.reason)}</span></div>`;
   }
 
@@ -178,13 +178,13 @@ function renderTestResults(result) {
 function renderTestResultsBody(entry, result) {
   const desc = entry.descriptor || {};
   const relays = (entry.seenOn || []).join(', ') || '?';
-  const endpoint = desc.service?.endpoint || '';
+  const schemaUrl = desc.service?.schema?.url || '';
 
   let html = '<div class="section-title">Descriptor Info</div>';
   html += `<div class="result-row"><span class="result-field">Event ID</span><span class="result-message">${escapeHtml(entry.eventId || '?')}</span></div>`;
   html += `<div class="result-row"><span class="result-field">Published at</span><span class="result-message">${entry.created_at ? new Date(entry.created_at * 1000).toISOString() : '?'}</span></div>`;
   html += `<div class="result-row"><span class="result-field">Seen on</span><span class="result-message">${escapeHtml(relays)}</span></div>`;
-  if (endpoint) html += `<div class="result-row"><span class="result-field">Endpoint</span><span class="result-message">${escapeHtml(endpoint)}</span></div>`;
+  if (schemaUrl) html += `<div class="result-row"><span class="result-field">Schema URL</span><span class="result-message">${escapeHtml(schemaUrl)}</span></div>`;
 
   html += renderTestResults(result);
   return html;
@@ -219,10 +219,10 @@ function updateSingleCard(eventId) {
       ? '<span class="badge badge-pass">PASS</span>'
       : `<span class="badge badge-fail">${fCount} FAILURE${fCount !== 1 ? 'S' : ''}</span>`;
   }
-  const hasService = !!(entry.descriptor?.service);
+  const hasService = !!(entry.descriptor?.service?.schema);
   badgeHtml += hasService
-    ? '<span class="badge badge-standalone">STANDALONE</span>'
-    : '<span class="badge badge-discovery">DISCOVERY-ONLY</span>';
+    ? '<span class="badge badge-standalone">SCHEMA DISCOVERY</span>'
+    : '<span class="badge badge-discovery">COMPATIBILITY</span>';
 
   // Rebuild title area badges (keep the type badge intact)
   const typeSpan = titleDiv.querySelector('.type');
@@ -270,6 +270,7 @@ async function runSingleTest(eventId, cardElement) {
         descriptor: entry.descriptor,
         pubkey: entry.pubkey,
         eventId: entry.eventId,
+        tags: entry.tags,
       }),
     });
     const data = await res.json();
