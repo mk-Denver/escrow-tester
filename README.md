@@ -1,6 +1,6 @@
 # PIP-01 Escrow Descriptor Tester
 
-A web-based tool for discovering and validating [PIP-01](https://github.com/mk-Denver/protocol/blob/mk/escrow-invocation/PIP-01-escrow-descriptor.md) escrow descriptors from Nostr relays.
+A web-based tool for discovering and validating [PIP-01](https://github.com/pontmore/protocol/blob/agent/simplify-pip01/PIP-01-escrow-descriptor.md) escrow descriptors from Nostr relays.
 
 ## Features
 
@@ -33,16 +33,42 @@ Set `NOSTR_RELAYS` in `.env` to customize which relays to query (default: `wss:/
 
 ```
 escrow-tester/
-  server.js          Express backend + static file serving
+  server.js               Express backend + static file serving
+  netlify.toml            Netlify build and redirect config
+  netlify/
+    functions/
+      api.js              Netlify serverless function wrapper
   lib/
-    relay.js         Nostr relay WebSocket querying (kind 30361)
-    validate.js      PIP-01 descriptor validation
-    test-runner.js   Service-schema fetch-safety tests against live schema artifacts
+    relay.js              Nostr relay WebSocket querying (kind 30361)
+    validate.js           PIP-01 descriptor validation
+    test-runner.js        Schema fetch-safety tests against live schema artifacts
   public/
-    index.html       Web UI
-    app.js           Frontend logic (discover → render cards)
-    style.css        Dark theme styling
+    index.html            Web UI
+    app.js                Frontend logic (discover → render cards)
+    style.css             Dark theme styling
 ```
+
+## Deployment
+
+### Netlify
+
+The project ships with a [`netlify.toml`](./netlify.toml) and a [serverless function wrapper](./netlify/functions/api.js), so it can be deployed to [Netlify](https://netlify.com) with no code changes.
+
+**Steps:**
+
+1. Push this repository to GitHub (or import it directly into Netlify).
+2. In the Netlify dashboard, add a new site from the repo.
+3. Set the runtime environment variables (Site settings → Environment variables):
+   - `NOSTR_RELAYS` — comma-separated relay URLs (default: `wss://nos.lol,wss://relay.damus.io`)
+   - `RELAY_TIMEOUT_MS` — per-relay WebSocket timeout in ms (default: `10000`)
+
+**How it works:**
+
+- `public/` is served as a static site from the CDN.
+- `/api/*` requests are rewritten to the Netlify Function at `netlify/functions/api.js`, which wraps the Express app with [`serverless-http`](https://github.com/dougmoscrop/serverless-http).
+- Node 20 and the esbuild function bundler are set in `netlify.toml`.
+
+**Caveat:** Nostr relay queries open outbound WebSocket connections, and Netlify Functions have a bounded execution time (default 10s, max 26s). Slow relays may time out before returning results — keep `RELAY_TIMEOUT_MS` well below the configured function timeout.
 
 ## Validation Coverage
 
